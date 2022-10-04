@@ -4,28 +4,24 @@ module Main where
 
 
 import Prelude hiding (words)
-import Data.Text hiding (length, head)
+import Data.Text hiding (length, head, tail,concat)
 
-data Exp = Num Int | Literal Text | Tree [Exp] deriving (Eq, Ord, Read, Show)
+data Exp = Num Int | Literal Text | Identifier Text | Expr [Exp] deriving (Eq, Ord, Read, Show)
 
 tokenize :: Text -> [Text]
 tokenize line = words $ replace ")" " ) " (replace "(" " ( " line)
 
-parse :: [Text] -> Exp
+parse :: [Text] -> [Exp]
 parse (x:xs)
   | length (x:xs) == 0 = error "no program"
-  | x == "(" = parseLeft xs
-  | otherwise = atomParse x
+  | x == "(" = [Expr (atomParse xs)]
+  | otherwise = []
 
-parseLeft :: [Text] -> Exp 
-parseLeft (x:xs)
-  | x == ")" = error "unexpected"
-  | otherwise = Tree [Literal "left"] --Todo Parsing
-
-atomParse :: Text -> Exp
-atomParse atom
-  | atom == ")" = error "unexpected"
-  | otherwise = Literal atom --Todo atom type
+atomParse :: [Text] -> [Exp]
+atomParse (x:xs) 
+  | x == ")" = parse xs
+  | x == "(" = parse (x:xs)
+  | otherwise = Literal x : atomParse xs
 
 main :: IO ()
 main = print $ parse $ tokenize "(begin (define r 10) (* pi (* r r)))" 
